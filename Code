@@ -1,0 +1,136 @@
+import pygame
+import random
+
+pygame.init()
+
+swidth, sheight = 800, 600
+BALL_RADIUS = 10
+BALL_COLOR = (255, 0, 0)  # Red color
+BACKGROUND_COLOR = (0, 0, 0)  # Black background
+PADDLE_WIDTH, PADDLE_HEIGHT = 100, 15
+PADDLE_COLOR = (0, 0, 255)  # Blue color
+bwidth, bheight = 60, 20
+BRICK_COLOR = (0, 255, 0)  # Green color
+ROWS, COLS = 5, 10  # Number of rows and columns for bricks
+FPS = 60
+
+# Set up the display
+screen = pygame.display.set_mode((swidth, sheight))
+pygame.display.set_caption("DX Ball Game")
+
+# Ball properties
+ball_x = swidth // 2
+ball_y = sheight // 2
+ball_speed_x = random.choice([-5, 5])
+ball_speed_y = -5
+
+# Paddle properties
+paddle_x = (swidth - PADDLE_WIDTH) // 2
+paddle_y = sheight - PADDLE_HEIGHT - 30
+
+# Create bricks
+bricks = []
+for row in range(ROWS):
+    for col in range(COLS):
+        xbrick = col * (bwidth + 10) + 35
+        ybrick = row * (bheight + 10) + 50
+        bricks.append(pygame.Rect(xbrick, ybrick, bwidth, bheight))
+
+# Game loop flag
+running = True
+game_over = False
+score = 0
+
+# Clock to control frame rate
+clock = pygame.time.Clock()
+
+# Font for displaying score
+font = pygame.font.SysFont(None, 36)
+
+# Function to draw text on screen
+def draw_text(text, font, color, surface, x, y):
+    textobj = font.render(text, True, color)
+    textrect = textobj.get_rect()
+    textrect.topleft = (x, y)
+    surface.blit(textobj, textrect)
+
+# Main game loop
+while running:
+    screen.fill(BACKGROUND_COLOR)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEMOTION:
+            paddle_x = event.pos[0] - PADDLE_WIDTH // 2
+
+    if paddle_x < 0:
+        paddle_x = 0
+    elif paddle_x > swidth - PADDLE_WIDTH:
+        paddle_x = swidth - PADDLE_WIDTH
+
+    if not game_over:
+        # Update ball position
+        ball_x += ball_speed_x
+        ball_y += ball_speed_y
+
+        # Check for collision with the walls and bounce
+        if ball_x - BALL_RADIUS <= 0 or ball_x + BALL_RADIUS >= swidth:
+            ball_speed_x = -ball_speed_x
+        if ball_y - BALL_RADIUS <= 0:
+            ball_speed_y = -ball_speed_y
+
+        # Check for collision with the paddle
+        if (paddle_y <= ball_y + BALL_RADIUS <= paddle_y + PADDLE_HEIGHT and
+            paddle_x <= ball_x <= paddle_x + PADDLE_WIDTH):
+            ball_speed_y = -ball_speed_y
+
+        # Check for collision with bricks
+        for brick in bricks[:]:
+            if brick.collidepoint(ball_x, ball_y):
+                ball_speed_y = -ball_speed_y
+                bricks.remove(brick)
+                score += 10
+                break
+
+        # Check if the ball goes out of the screen at the bottom
+        if ball_y > sheight:
+            game_over = True
+
+    # Draw the ball
+    pygame.draw.circle(screen, BALL_COLOR, (ball_x, ball_y), BALL_RADIUS)
+
+    # Draw the paddle
+    pygame.draw.rect(screen, PADDLE_COLOR, (paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT))
+
+    # Draw the bricks
+    for brick in bricks:
+        pygame.draw.rect(screen, BRICK_COLOR, brick)
+
+    # Draw the score
+    draw_text(f'Score: {score}', font, (255, 255, 255), screen, 5, 5)
+
+    if game_over:
+        draw_text('Game Over! Press R to Restart', font, (255, 255, 255), screen, swidth // 2 - 150, sheight // 2)
+        # Check for restart event
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:
+            game_over = False
+            ball_x, ball_y = swidth // 2, sheight // 2
+            ball_speed_x, ball_speed_y = random.choice([-5, 5]), -5
+            bricks = []
+            for row in range(ROWS):
+                for col in range(COLS):
+                    xbrick = col * (bwidth + 10) + 35
+                    ybrick = row * (bheight + 10) + 50
+                    bricks.append(pygame.Rect(xbrick, ybrick, bwidth, bheight))
+            score = 0
+
+    # Update the display
+    pygame.display.flip()
+
+    # Cap the frame rate
+    clock.tick(FPS)
+
+# Quit Pygame
+pygame.quit()
