@@ -3,16 +3,7 @@ import random
 
 pygame.init()
 
-swidth, sheight = 800, 600
-BALL_RADIUS = 10
-BALL_COLOR = (255, 0, 0)
-BACKGROUND_COLOR = (0, 0, 0)
-PADDLE_WIDTH, PADDLE_HEIGHT = 100, 15
-PADDLE_COLOR = (0, 0, 255)
-bwidth, bheight = 60, 20
-BRICK_COLOR = (0, 255, 0)
-ROWS, COLS = 5, 10
-FPS = 60
+
 
 screen = pygame.display.set_mode((swidth, sheight))
 pygame.display.set_caption("DX Ball Game")
